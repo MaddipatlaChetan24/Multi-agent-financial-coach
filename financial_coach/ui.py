@@ -147,7 +147,7 @@ def display_savings_strategy(strategy: Dict[str, Any]):
         if ef.get("recommended_amount"):
             progress = (ef.get("current_amount") or 0) / ef["recommended_amount"]
             st.progress(min(progress, 1.0))
-            st.markdown(f"${ef.get('current_amount', 0):.2f} of ${ef['recommended_amount']:.2f}")
+            st.markdown(f"\\${ef.get('current_amount', 0):.2f} of \\${ef['recommended_amount']:.2f}")
 
     if strategy.get("recommendations"):
         st.markdown("### Recommended Savings Allocations")
