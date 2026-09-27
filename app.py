@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from financial_coach import ui
+from financial_coach import theme, ui
 from financial_coach.advisor import FinanceAdvisorSystem
 from financial_coach.csv_utils import parse_csv_transactions, validate_csv_format
 from financial_coach.report import build_markdown_report
@@ -31,7 +31,7 @@ MANUAL_EXPENSE_CATEGORIES = [
 
 
 def render_expenses_section():
-    st.subheader("💳 Expenses")
+    theme.section_header("💳", "Expenses", "Upload transactions or enter monthly totals by category")
     expense_option = st.radio(
         "How would you like to enter your expenses?",
         ("📤 Upload CSV Transactions", "✍️ Enter Manually"),
@@ -97,6 +97,7 @@ def render_expenses_section():
 
 def main():
     st.set_page_config(page_title="AI Financial Coach with Google ADK", layout="wide", initial_sidebar_state="expanded")
+    theme.apply_theme()
 
     ui.render_sidebar()
 
@@ -104,38 +105,35 @@ def main():
         st.error("🔑 GOOGLE_API_KEY not found in environment variables. Please add it to your .env file.")
         return
 
-    st.title("📊 AI Financial Coach with Google ADK")
-    st.caption("Powered by Google's Agent Development Kit (ADK) and Gemini AI")
-    st.info(
-        "This tool analyzes your financial data and provides tailored recommendations for budgeting, "
-        "savings, debt payoff, and goal planning. Debt amortization and emergency-fund sizing are "
-        "computed with real math in Python; the AI agents handle categorization and recommendations."
+    theme.render_hero(
+        "📊 AI Financial Coach",
+        "Multi-agent budgeting, savings, debt payoff, and goal planning — powered by Google ADK and Gemini, "
+        "with real Python math behind every dollar figure.",
+        badges=["Multi-Agent · Google ADK", "Gemini 2.5 Flash", "Deterministic Finance Math"],
     )
-    st.divider()
 
     input_tab, about_tab = st.tabs(["💼 Financial Information", "ℹ️ About"])
 
     with input_tab:
-        st.header("Enter Your Financial Information")
         st.caption("All data is processed locally and not stored anywhere.")
 
-        with st.container():
+        with st.container(border=True):
+            theme.section_header("💰", "Income & Household")
             monthly_income, dependants, income_stability = ui.render_income_and_household()
             current_emergency_savings = ui.render_emergency_savings_input()
 
-        st.divider()
-        with st.container():
+        with st.container(border=True):
             transactions_df, manual_expenses, use_manual_expenses = render_expenses_section()
 
-        st.divider()
-        with st.container():
+        with st.container(border=True):
+            theme.section_header("🏦", "Debt Information", "Get avalanche and snowball payoff comparisons")
             debts = ui.render_debts_input()
 
-        st.divider()
-        with st.container():
+        with st.container(border=True):
+            theme.section_header("🎯", "Financial Goals", "Funded in priority order from your monthly surplus")
             goals = ui.render_goals_input()
 
-        st.divider()
+        st.write("")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             analyze_button = st.button("🔄 Analyze My Finances", key="analyze_button", use_container_width=True)
@@ -148,7 +146,8 @@ def main():
             if use_manual_expenses and (not manual_expenses or not any(manual_expenses.values())):
                 st.warning("No manual expenses entered. Analysis might be limited.")
 
-            st.header("Financial Analysis Results")
+            st.divider()
+            theme.section_header("📊", "Financial Analysis Results")
             with st.spinner("🤖 AI agents are analyzing your financial data..."):
                 financial_data = {
                     "monthly_income": monthly_income,
@@ -165,6 +164,31 @@ def main():
 
                 try:
                     results = asyncio.run(finance_system.analyze_finances(financial_data))
+
+                    budget = results.get("budget_analysis") or {}
+                    debt = results.get("debt_reduction") or {}
+                    ef = (results.get("savings_strategy") or {}).get("emergency_fund") or {}
+                    surplus = (budget.get("monthly_income") or 0) - (budget.get("total_expenses") or 0)
+
+                    theme.render_stat_row(
+                        [
+                            {"icon": "💵", "label": "Monthly Income", "value": f"${budget.get('monthly_income', 0):,.0f}"},
+                            {"icon": "💳", "label": "Monthly Expenses", "value": f"${budget.get('total_expenses', 0):,.0f}"},
+                            {
+                                "icon": "📈" if surplus >= 0 else "📉",
+                                "label": "Surplus / Deficit",
+                                "value": f"${surplus:,.0f}",
+                                "tone": "good" if surplus >= 0 else "critical",
+                            },
+                            {"icon": "🏦", "label": "Total Debt", "value": f"${debt.get('total_debt', 0):,.0f}"},
+                            {
+                                "icon": "🛟",
+                                "label": "Emergency Fund",
+                                "value": ef.get("current_status", "Unknown"),
+                                "caption": f"Target: ${ef.get('recommended_amount', 0):,.0f}",
+                            },
+                        ]
+                    )
 
                     tabs = st.tabs(["💰 Budget Analysis", "📈 Savings Strategy", "💳 Debt Reduction", "🎯 Goals"])
 

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 import streamlit as st
 
-from financial_coach import calculators, charts
+from financial_coach import calculators, charts, theme
 from financial_coach.csv_utils import monthly_category_trend
 
 
@@ -55,7 +55,6 @@ def render_sidebar():
 
 
 def render_income_and_household() -> Tuple[float, int, str]:
-    st.subheader("💰 Income & Household")
     income_col, dependants_col, stability_col = st.columns([2, 1, 1])
     with income_col:
         monthly_income = st.number_input(
@@ -83,7 +82,7 @@ def render_emergency_savings_input() -> float:
 
 
 def display_csv_preview(df: pd.DataFrame):
-    st.subheader("CSV Data Preview")
+    theme.section_header("📄", "CSV Data Preview")
 
     total_transactions = len(df)
     total_amount = df["Amount"].sum()
@@ -95,7 +94,7 @@ def display_csv_preview(df: pd.DataFrame):
     col2.metric("Total Amount", f"${total_amount:,.2f}")
     col3.metric("Date Range", date_range)
 
-    st.subheader("Spending by Category")
+    theme.section_header("📊", "Spending by Category")
     category_totals = df.groupby("Category")["Amount"].agg(["sum", "count"]).reset_index()
     category_totals.columns = ["Category", "Total Amount", "Transaction Count"]
     st.dataframe(category_totals)
@@ -114,11 +113,11 @@ def display_budget_analysis(analysis: Dict[str, Any]):
         return
 
     if analysis.get("spending_categories"):
-        st.subheader("Spending by Category")
+        theme.section_header("🥧", "Spending by Category")
         st.plotly_chart(charts.spending_breakdown_bar(analysis["spending_categories"]), use_container_width=True)
 
     if "total_expenses" in analysis:
-        st.subheader("Income vs. Expenses")
+        theme.section_header("⚖️", "Income vs. Expenses")
         income = analysis.get("monthly_income", 0) or 0
         expenses = analysis["total_expenses"]
         surplus_deficit = income - expenses
@@ -126,7 +125,7 @@ def display_budget_analysis(analysis: Dict[str, Any]):
         st.metric("Monthly Surplus/Deficit", f"${surplus_deficit:.2f}", delta=f"{surplus_deficit:.2f}")
 
     if analysis.get("recommendations"):
-        st.subheader("Spending Reduction Recommendations")
+        theme.section_header("💡", "Spending Reduction Recommendations")
         for rec in analysis["recommendations"]:
             st.markdown(f"**{rec['category']}**: {rec['recommendation']}")
             if rec.get("potential_savings"):
@@ -138,7 +137,7 @@ def display_savings_strategy(strategy: Dict[str, Any]):
     if strategy is None:
         return
 
-    st.subheader("Savings Recommendations")
+    theme.section_header("📈", "Savings Recommendations")
 
     ef = strategy.get("emergency_fund")
     if ef:
@@ -172,13 +171,13 @@ def display_debt_reduction(plan: Dict[str, Any]):
         st.metric("Total Debt", f"${plan['total_debt']:.2f}")
 
     if plan.get("debts"):
-        st.subheader("Your Debts")
+        theme.section_header("📋", "Your Debts")
         st.dataframe(pd.DataFrame(plan["debts"]))
         st.plotly_chart(charts.debt_breakdown_bar(plan["debts"]), use_container_width=True)
 
     payoff_plans = plan.get("payoff_plans")
     if payoff_plans and payoff_plans.get("avalanche") and payoff_plans.get("snowball"):
-        st.subheader("Debt Payoff Plans")
+        theme.section_header("🧮", "Debt Payoff Plans", "Computed with real month-by-month amortization")
         avalanche, snowball = payoff_plans["avalanche"], payoff_plans["snowball"]
         tabs = st.tabs(["Avalanche Method", "Snowball Method", "Comparison"])
 
@@ -209,7 +208,7 @@ def display_debt_reduction(plan: Dict[str, Any]):
             col2.plotly_chart(figs["months"], use_container_width=True)
 
     if plan.get("recommendations"):
-        st.subheader("Debt Reduction Recommendations")
+        theme.section_header("💡", "Debt Reduction Recommendations")
         for rec in plan["recommendations"]:
             st.markdown(f"**{rec['title']}**: {rec['description']}")
             if rec.get("impact"):
@@ -267,7 +266,6 @@ def display_goal_plan(plan: Dict[str, Any]):
 
 
 def render_goals_input() -> List[Dict[str, Any]]:
-    st.subheader("🎯 Financial Goals")
     st.info(
         "Add savings goals (a house down payment, retirement, a big purchase). "
         "They're funded in the order listed, using whatever monthly surplus is left "
@@ -303,7 +301,6 @@ def render_goals_input() -> List[Dict[str, Any]]:
 
 
 def render_debts_input() -> List[Dict[str, Any]]:
-    st.subheader("🏦 Debt Information")
     st.info("Enter your debts to get personalized payoff strategies using both avalanche and snowball methods.")
 
     num_debts = st.number_input("How many debts do you have?", min_value=0, max_value=10, step=1, value=0, key="num_debts")
