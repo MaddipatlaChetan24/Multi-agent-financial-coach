@@ -34,6 +34,8 @@ Every number that requires arithmetic — debt payoff schedules, emergency fund 
 
 - **Accessible charts** — every chart uses a colorblind-safe, fixed-order palette; the original's pie chart (poor for 9 categories) and dual-unit grouped bar chart (mixing dollars and months on one axis) were replaced with ranked bars and single-metric small multiples
 
+- **A dashboard, not a script** — a custom theme, gradient hero header, card-style input sections, and a 5-tile stat-card summary (income, expenses, surplus/deficit, debt, emergency fund) replace the default flat Streamlit look
+
 - **Actually runs** — the original pinned `google-adk==0.1.0`, which imports a package it never declares as a dependency and fails on import. Pinned here to a working, tested version, with `create_session`/`get_session`/`delete_session` correctly awaited for the modern async ADK session API
 
 ## Architecture
@@ -45,6 +47,7 @@ financial_coach/
   calculators.py            Deterministic finance math — unit tested
   csv_utils.py              CSV parsing, validation, monthly trend aggregation
   charts.py                 Plotly chart builders (colorblind-safe fixed palette)
+  theme.py                  Custom CSS theme, hero header, stat cards, section headers
   agents.py                 The four ADK LlmAgent definitions + coordinator
   advisor.py                Orchestration: precompute -> run agents -> merge results
   report.py                 Markdown report generation
