@@ -1,101 +1,184 @@
+<div align="center">
+
 # 💰 AI Financial Coach
 
-A multi-agent personal finance advisor built on **Google's Agent Development Kit (ADK)** and **Gemini**. It analyzes your income, expenses, debts, and goals, then produces a full financial plan: budget breakdown, savings strategy, a real debt payoff comparison, and a multi-goal funding plan — downloadable as a Markdown report.
+**Turn your income, expenses, debts, and goals into a complete, practical financial plan.**
 
-> Forked and substantially rewritten from [Shubham Saboo's `ai_financial_coach_agent`](https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_ai_agents/multi_agent_apps/ai_financial_coach_agent) example. See [NOTICE](NOTICE) for what changed and why.
+A multi-agent AI advisor that analyzes your finances and produces a budget breakdown, a savings strategy, a real debt payoff comparison, and a multi-goal funding plan — using Google's Agent Development Kit and Gemini.
 
-## Why this fork exists
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Google ADK](https://img.shields.io/badge/Google-ADK-4285F4?logo=google&logoColor=white)](https://google.github.io/adk-docs/)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-The original app asked an LLM to *compute* debt amortization schedules and emergency fund sizes from scratch. LLMs are not reliable calculators — two runs on the same inputs can produce different "total interest" numbers. This version draws a hard line:
+</div>
 
-> **Agents reason. Code computes.**
+---
 
-Every number that requires arithmetic — debt payoff schedules, emergency fund targets, goal contribution requirements — is computed by deterministic Python in [`financial_coach/calculators.py`](financial_coach/calculators.py) and covered by unit tests. The four Gemini-backed agents are only ever asked to categorize, prioritize, and write recommendations on top of numbers they're handed, never to invent them.
+> Forked and substantially rewritten from [Shubham Saboo's `ai_financial_coach_agent`](https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_ai_agents/multi_agent_apps/ai_financial_coach_agent). See [NOTICE](NOTICE) for the full list of changes.
+>
+> **Why this fork exists:** the original asked an LLM to *compute* debt amortization and emergency-fund numbers from scratch — LLMs are not reliable calculators, and two runs on the same input could produce different answers. This version draws a hard line: **agents reason, code computes.** Every number that requires arithmetic is computed by tested, deterministic Python; the four Gemini agents only categorize, prioritize, and write recommendations on top of numbers they're handed.
+
+---
 
 ## Features
 
-- **Four-agent pipeline (Google ADK `SequentialAgent`)**
-  - 🔍 **Budget Analysis Agent** — categorizes spending, flags cost-reduction opportunities
-  - 💰 **Savings Strategy Agent** — recommends savings allocations and automation techniques
-  - 💳 **Debt Reduction Agent** — writes recommendations on top of a real avalanche/snowball simulation
-  - 🎯 **Goal Planning Agent** *(new)* — prioritizes competing goals and explains tradeoffs when surplus income is tight
+| Feature | Description |
+|---|---|
+| **Multi-Agent Analysis** | Four specialized agents — budget, savings, debt, and goals — orchestrated as a Google ADK `SequentialAgent` |
+| **Deterministic Finance Math** | Real amortization, emergency-fund sizing, and goal projections computed in Python and unit tested, never guessed by the LLM |
+| **Debt Payoff Comparison** | True month-by-month avalanche vs. snowball simulation, with total interest and time-to-debt-free compared side by side |
+| **Goal Planning** | Multi-goal budgeting that funds goals in priority order from whatever monthly surplus is left over, with realistic timelines when goals don't fully fit |
+| **CSV or Manual Expenses** | Upload transactions or enter monthly totals by category, with a multi-month spending trend chart when your data spans more than one month |
+| **Downloadable Report** | The full financial plan exported as a shareable Markdown file |
+| **SaaS-Style Dashboard** | A custom theme, gradient hero header, and stat-card summary in place of default Streamlit widgets |
 
-- **Real financial math, not LLM guesses**
-  - True month-by-month amortization for both the avalanche and snowball debt payoff methods
-  - Emergency fund sizing based on income stability and dependants
-  - Compound-interest goal projections with a required-monthly-contribution solver
-  - Multi-goal budgeting: goals are funded in priority order from whatever surplus is left after expenses and minimum debt payments, with realistic revised timelines for goals that don't fit
-
-- **Expense input**
-  - CSV upload (with format validation) or manual category entry
-  - Multi-month CSV data now renders a spending trend chart by category — the original ignored the time dimension entirely
-
-- **Downloadable report** — a full Markdown financial plan you can save or share
-
-- **Accessible charts** — every chart uses a colorblind-safe, fixed-order palette; the original's pie chart (poor for 9 categories) and dual-unit grouped bar chart (mixing dollars and months on one axis) were replaced with ranked bars and single-metric small multiples
-
-- **A dashboard, not a script** — a custom theme, gradient hero header, card-style input sections, and a 5-tile stat-card summary (income, expenses, surplus/deficit, debt, emergency fund) replace the default flat Streamlit look
-
-- **Actually runs** — the original pinned `google-adk==0.1.0`, which imports a package it never declares as a dependency and fails on import. Pinned here to a working, tested version, with `create_session`/`get_session`/`delete_session` correctly awaited for the modern async ADK session API
+---
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    A["User Input\n(income, expenses, debts, goals)"] --> B["Streamlit UI"]
+    B --> C["FinanceAdvisorSystem"]
+    C --> D["calculators.py\nDeterministic math"]
+    D --> E{"Google ADK\nSequentialAgent"}
+
+    E --> F["Budget Analysis\nAgent"]
+    E --> G["Savings Strategy\nAgent"]
+    E --> H["Debt Reduction\nAgent"]
+    E --> I["Goal Planning\nAgent"]
+
+    F --> J["Merged Results"]
+    G --> J
+    H --> J
+    I --> J
+
+    J --> K["Dashboard, Charts\n& Markdown Report"]
+    K --> B
 ```
-app.py                      Streamlit entrypoint
-financial_coach/
-  models.py                 Pydantic schemas (LLM "insight" outputs vs. computed data)
-  calculators.py            Deterministic finance math — unit tested
-  csv_utils.py              CSV parsing, validation, monthly trend aggregation
-  charts.py                 Plotly chart builders (colorblind-safe fixed palette)
-  theme.py                  Custom CSS theme, hero header, stat cards, section headers
-  agents.py                 The four ADK LlmAgent definitions + coordinator
-  advisor.py                Orchestration: precompute -> run agents -> merge results
-  report.py                 Markdown report generation
-  ui.py                     Streamlit display + input-collection functions
-tests/
-  test_calculators.py       Unit tests for all deterministic math
-```
 
-## Setup
+Numbers flow **into** the agents from `calculators.py`, never the other way around — the agents never originate a dollar figure.
 
-1. **Get a Gemini API key**: [Google AI Studio](https://aistudio.google.com/apikey)
+---
 
-2. **Clone and enter the project**
-   ```bash
-   git clone <this-repo-url>
-   cd ai-financial-coach
-   ```
+## Tech Stack
 
-3. **Create a `.env` file**
-   ```bash
-   cp .env.example .env
-   # then edit .env and set GOOGLE_API_KEY
-   ```
+- **Framework**: [Streamlit](https://streamlit.io/)
+- **AI Orchestration**: [Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/)
+- **LLM Provider**: [Google Gemini](https://ai.google.dev/) (`gemini-2.5-flash`)
+- **Data**: [Pandas](https://pandas.pydata.org/)
+- **Charts**: [Plotly](https://plotly.com/python/)
+- **Validation**: [Pydantic](https://docs.pydantic.dev/)
+- **Testing**: [Pytest](https://pytest.org/)
 
-4. **Install dependencies**
-   ```bash
-   python -m venv venv && source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+---
 
-5. **Run it**
-   ```bash
-   streamlit run app.py
-   ```
+## Quick Start
 
-### Run with Docker
+### Prerequisites
+
+- Python ≥ 3.10
+- A free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/ai-financial-coach.git
+cd ai-financial-coach
+
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate    # macOS/Linux
+# venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Configuration
+
+```bash
+cp .env.example .env
+# then edit .env and set GOOGLE_API_KEY
+```
+
+### Run
+
+```bash
+streamlit run app.py
+```
+
+The app opens at **http://localhost:8501/**.
+
+---
+
+## Project Structure
+
+```text
+ai-financial-coach/
+├── app.py                     # Streamlit entrypoint
+├── financial_coach/
+│   ├── models.py              # Pydantic schemas (LLM "insight" outputs vs. computed data)
+│   ├── calculators.py         # Deterministic finance math — unit tested
+│   ├── csv_utils.py           # CSV parsing, validation, monthly trend aggregation
+│   ├── charts.py              # Plotly chart builders (colorblind-safe fixed palette)
+│   ├── theme.py               # Custom CSS theme, hero header, stat cards
+│   ├── agents.py              # The four ADK LlmAgent definitions + coordinator
+│   ├── advisor.py             # Orchestration: precompute -> run agents -> merge results
+│   ├── report.py              # Markdown report generation
+│   └── ui.py                  # Streamlit display + input-collection functions
+├── tests/
+│   └── test_calculators.py    # Unit tests for all deterministic math
+├── Dockerfile
+└── requirements.txt
+```
+
+---
+
+## Usage
+
+1. Open `http://localhost:8501/` in your browser.
+2. Enter your monthly income, dependants, and current emergency savings.
+3. Add your expenses — upload a CSV of transactions or enter monthly totals by category.
+4. Add any debts and financial goals you want a plan for.
+5. Click **Analyze My Finances**. The four agents run in sequence, each reading the deterministic numbers and the previous agent's output.
+6. Review your budget, savings strategy, debt payoff comparison, and goal plan, then download the full report as Markdown.
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | Yes | Gemini API key used by all four agents |
+
+---
+
+## Docker Deployment
+
+```bash
+# Build the image
 docker build -t ai-financial-coach .
+
+# Run the container (ensure your .env is passed)
 docker run -p 8501:8501 --env-file .env ai-financial-coach
 ```
 
-### Run the tests
+---
+
+## Testing
 
 ```bash
 pip install -r requirements-dev.txt
 pytest
 ```
+
+All debt-amortization, emergency-fund, and goal-projection math is covered by unit tests in `tests/test_calculators.py`.
+
+---
 
 ## CSV File Format
 
@@ -106,7 +189,9 @@ Date,Category,Amount
 2024-01-03,Transportation,45.00
 ```
 
-Required columns: `Date` (YYYY-MM-DD), `Category`, `Amount` (currency symbols/commas are stripped automatically). A template is available from the app's sidebar. Upload multiple months of data to see the spending trend chart.
+Required columns: `Date` (YYYY-MM-DD), `Category`, `Amount` (currency symbols and commas are stripped automatically). A template is available from the app's sidebar. Upload multiple months of data to see the spending trend chart.
+
+---
 
 ## Privacy
 
@@ -117,3 +202,9 @@ All data is processed locally in your session; nothing is persisted to disk. Fin
 Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 This is an educational project, not professional financial advice.
+
+---
+
+<div align="center">
+<sub>Built using Python, Streamlit, Google ADK & Gemini</sub>
+</div>
