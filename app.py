@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from financial_coach import theme, ui
+from financial_coach import history, theme, ui
 from financial_coach.advisor import FinanceAdvisorSystem
 from financial_coach.csv_utils import parse_csv_transactions, validate_csv_format
 from financial_coach.report import build_markdown_report
@@ -95,21 +95,60 @@ def render_expenses_section():
     return transactions_df, manual_expenses, use_manual_expenses
 
 
+_VERDICT_TONE = {"Healthy Surplus": "good", "Tight Budget": "warning", "Deficit": "critical"}
+
+
+def render_history_section():
+    theme.section_header("🕘", "History", "Every analysis run through this app, persisted locally on your machine")
+    entries = history.load_history()
+    if not entries:
+        st.caption("No runs yet — click “Analyze My Finances” above to create your first entry.")
+        return
+
+    rows = [
+        [
+            str(i + 1),
+            entry["timestamp"],
+            f"${entry['monthly_income']:,.0f}",
+            f"${entry['total_expenses']:,.0f}",
+            f"${entry['total_debt']:,.0f}",
+            theme.badge(entry["verdict"], _VERDICT_TONE.get(entry["verdict"], "neutral")),
+        ]
+        for i, entry in enumerate(entries)
+    ]
+    theme.render_table(["#", "When", "Income", "Expenses", "Total Debt", "Verdict"], rows)
+
+
 def main():
     st.set_page_config(page_title="AI Financial Coach with Google ADK", layout="wide", initial_sidebar_state="expanded")
     theme.apply_theme()
 
     ui.render_sidebar()
 
+    theme.render_topbar(
+        brand="🛡️ AI Financial Coach",
+        links=["Product", "How it works", "GitHub"],
+        cta_label="Analyze Now",
+    )
+
     if not GEMINI_API_KEY:
         st.error("🔑 GOOGLE_API_KEY not found in environment variables. Please add it to your .env file.")
         return
 
     theme.render_hero(
-        "📊 AI Financial Coach",
-        "Multi-agent budgeting, savings, debt payoff, and goal planning — powered by Google ADK and Gemini, "
-        "with real Python math behind every dollar figure.",
-        badges=["Multi-Agent · Google ADK", "Gemini 2.5 Flash", "Deterministic Finance Math"],
+        eyebrow="Multi-Agent · Deterministic Finance Math",
+        heading_line1="Get a financial plan your",
+        heading_line2_gradient="own math would approve.",
+        subtitle=(
+            "AI Financial Coach pairs a deterministic Python finance engine with four Gemini agents "
+            "via Google ADK — budgeting, savings, debt payoff, and goal planning, with every dollar "
+            "figure computed, never guessed."
+        ),
+        stats=[
+            {"value": "4", "label": "AI agents"},
+            {"value": "100%", "label": "deterministic math"},
+            {"value": "0", "label": "guessed numbers"},
+        ],
     )
 
     input_tab, about_tab = st.tabs(["💼 Financial Information", "ℹ️ About"])
@@ -209,8 +248,17 @@ def main():
                         file_name="financial_plan.md",
                         mime="text/markdown",
                     )
+
+                    history.append_history(
+                        monthly_income=budget.get("monthly_income", 0) or 0,
+                        total_expenses=budget.get("total_expenses", 0) or 0,
+                        total_debt=debt.get("total_debt", 0) or 0,
+                    )
                 except Exception as e:
                     st.error(f"An error occurred during analysis: {str(e)}")
+
+    st.divider()
+    render_history_section()
 
     with about_tab:
         st.markdown(

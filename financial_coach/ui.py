@@ -9,6 +9,18 @@ from financial_coach import calculators, charts, theme
 from financial_coach.csv_utils import monthly_category_trend
 
 
+def _apr_badge(interest_rate: float) -> str:
+    if interest_rate >= 20:
+        return theme.badge("HIGH APR", "critical")
+    if interest_rate >= 10:
+        return theme.badge("MEDIUM APR", "warning")
+    return theme.badge("LOW APR", "good")
+
+
+def _status_badge(on_track: bool) -> str:
+    return theme.badge("ON TRACK", "good") if on_track else theme.badge("AT RISK", "warning")
+
+
 def _coerce(data, label: str):
     if isinstance(data, str):
         try:
@@ -172,7 +184,11 @@ def display_debt_reduction(plan: Dict[str, Any]):
 
     if plan.get("debts"):
         theme.section_header("📋", "Your Debts")
-        st.dataframe(pd.DataFrame(plan["debts"]))
+        rows = [
+            [d["name"], f"${d['amount']:,.2f}", f"{d['interest_rate']:.2f}%", _apr_badge(d["interest_rate"]), f"${d.get('min_payment', 0):,.2f}"]
+            for d in plan["debts"]
+        ]
+        theme.render_table(["Name", "Balance", "APR", "Risk", "Min Payment"], rows)
         st.plotly_chart(charts.debt_breakdown_bar(plan["debts"]), use_container_width=True)
 
     payoff_plans = plan.get("payoff_plans")
@@ -228,7 +244,7 @@ def display_goal_plan(plan: Dict[str, Any]):
     st.metric("Available Monthly Surplus for Goals", f"${plan.get('available_monthly_surplus', 0):,.2f}")
 
     for goal in goals:
-        st.markdown(f"### 🎯 {goal['name']}")
+        st.markdown(f"### 🎯 {goal['name']}  {_status_badge(goal['on_track'])}", unsafe_allow_html=True)
         cols = st.columns(4)
         cols[0].metric("Target", f"${goal['target_amount']:,.2f}")
         cols[1].metric("Required/mo", f"${goal['required_monthly_contribution']:,.2f}")
