@@ -1,6 +1,6 @@
 <div align="center">
 
-# 💰 AI Financial Coach
+# AI Financial Coach
 
 **Turn your income, expenses, debts, and goals into a complete, practical financial plan.**
 
