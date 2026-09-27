@@ -1,0 +1,19 @@
+AI Financial Coach
+
+This project began as a fork of the "AI Financial Coach Agent" example from
+Shubham Saboo's awesome-llm-apps repository:
+https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_ai_agents/multi_agent_apps/ai_financial_coach_agent
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Substantial changes made in this fork:
+- Replaced LLM-estimated debt payoff math with deterministic Python
+  amortization simulations (avalanche and snowball methods)
+- Replaced LLM-estimated emergency fund sizing with a deterministic formula
+- Added a Goal Planning agent and multi-goal, surplus-aware funding planner
+- Added a downloadable Markdown financial report
+- Added multi-month spending trend charts from uploaded CSV data
+- Reworked charts onto a colorblind-safe, fixed-order palette and split
+  mixed-unit comparison charts into single-metric small multiples
+- Restructured the single-file script into a tested `financial_coach`
+  package with unit tests, a Dockerfile, and CI-friendly project layout
