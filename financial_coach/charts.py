@@ -66,7 +66,7 @@ def spending_breakdown_bar(categories: List[Dict[str, Any]]) -> go.Figure:
             y=names,
             orientation="h",
             marker_color=CATEGORICAL_DARK[0],
-            text=[f"${a:,.0f}" for a in amounts],
+            text=[f"₹{a:,.0f}" for a in amounts],
             textposition="outside",
             textfont=dict(color=PRIMARY_INK_DARK),
         )
@@ -81,7 +81,7 @@ def income_vs_expenses_bar(income: float, expenses: float) -> go.Figure:
             x=["Income", "Expenses"],
             y=[income, expenses],
             marker_color=[CATEGORICAL_DARK[0], CATEGORICAL_DARK[1]],
-            text=[f"${income:,.0f}", f"${expenses:,.0f}"],
+            text=[f"₹{income:,.0f}", f"₹{expenses:,.0f}"],
             textposition="outside",
             textfont=dict(color=PRIMARY_INK_DARK),
         )
@@ -101,7 +101,7 @@ def debt_breakdown_bar(debts: List[Dict[str, Any]]) -> go.Figure:
                 colorscale=[[i / (len(SEQUENTIAL_DARK) - 1), c] for i, c in enumerate(SEQUENTIAL_DARK)],
                 colorbar=dict(title="APR %", tickfont=dict(color=MUTED_INK_DARK)),
             ),
-            text=[f"${a:,.0f}" for a in df["amount"]],
+            text=[f"₹{a:,.0f}" for a in df["amount"]],
             textposition="outside",
             textfont=dict(color=PRIMARY_INK_DARK),
         )
@@ -125,7 +125,7 @@ def payoff_comparison_charts(avalanche: Dict[str, Any], snowball: Dict[str, Any]
             x=methods,
             y=[avalanche["total_interest"], snowball["total_interest"]],
             marker_color=colors,
-            text=[f"${avalanche['total_interest']:,.0f}", f"${snowball['total_interest']:,.0f}"],
+            text=[f"₹{avalanche['total_interest']:,.0f}", f"₹{snowball['total_interest']:,.0f}"],
             textposition="outside",
             textfont=dict(color=PRIMARY_INK_DARK),
         )
@@ -187,7 +187,7 @@ def goal_projection_chart(schedule: List[Dict[str, float]], target_amount: float
         y=target_amount,
         line_dash="dash",
         line_color=MUTED_INK_DARK,
-        annotation_text=f"Target: ${target_amount:,.0f}",
+        annotation_text=f"Target: ₹{target_amount:,.0f}",
         annotation_position="top left",
         annotation_font_color=MUTED_INK_DARK,
     )

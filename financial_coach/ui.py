@@ -36,30 +36,32 @@ def _coerce(data, label: str):
 
 def render_sidebar():
     with st.sidebar:
-        st.title("🔑 Setup & Templates")
-        st.info(
-            "📝 Please ensure you have your Gemini API key in the .env file:\n"
-            "```\nGOOGLE_API_KEY=your_api_key_here\n```"
-        )
+        st.title("Setup & Templates")
         st.caption(
             "This application uses Google's ADK (Agent Development Kit) and Gemini AI "
             "to provide personalized financial advice. Debt payoff math and emergency-fund "
             "sizing are computed deterministically in Python, not by the LLM."
         )
+        with st.expander("API key setup", expanded=False):
+            st.markdown(
+                "Add your Gemini API key to a `.env` file in the project root:\n"
+                "```\nGOOGLE_API_KEY=your_api_key_here\n```\n"
+                "Get a free key from [Google AI Studio](https://aistudio.google.com/apikey)."
+            )
         st.divider()
-        st.subheader("📊 CSV Template")
+        st.subheader("CSV Template")
         st.markdown(
             "Download the template CSV file with the required format:\n"
             "- Date (YYYY-MM-DD)\n- Category\n- Amount (numeric)"
         )
         sample_csv = (
             "Date,Category,Amount\n"
-            "2024-01-01,Housing,1200.00\n"
-            "2024-01-02,Food,150.50\n"
-            "2024-01-03,Transportation,45.00"
+            "2024-01-01,Housing,18000.00\n"
+            "2024-01-02,Food,2200.00\n"
+            "2024-01-03,Transportation,900.00"
         )
         st.download_button(
-            label="📥 Download CSV Template",
+            label="Download CSV Template",
             data=sample_csv,
             file_name="expense_template.csv",
             mime="text/csv",
@@ -70,7 +72,7 @@ def render_income_and_household() -> Tuple[float, int, str]:
     income_col, dependants_col, stability_col = st.columns([2, 1, 1])
     with income_col:
         monthly_income = st.number_input(
-            "Monthly Income ($)", min_value=0.0, step=100.0, value=3000.0, key="income",
+            "Monthly Income (₹)", min_value=0.0, step=1000.0, value=60000.0, key="income",
             help="Enter your total monthly income after taxes",
         )
     with dependants_col:
@@ -88,13 +90,13 @@ def render_income_and_household() -> Tuple[float, int, str]:
 
 def render_emergency_savings_input() -> float:
     return st.number_input(
-        "Current Emergency Fund Savings ($)", min_value=0.0, step=100.0, value=0.0,
+        "Current Emergency Fund Savings (₹)", min_value=0.0, step=1000.0, value=0.0,
         key="current_emergency_savings", help="How much do you already have saved for emergencies?",
     )
 
 
 def display_csv_preview(df: pd.DataFrame):
-    theme.section_header("📄", "CSV Data Preview")
+    theme.section_header("CSV Data Preview")
 
     total_transactions = len(df)
     total_amount = df["Amount"].sum()
@@ -103,10 +105,10 @@ def display_csv_preview(df: pd.DataFrame):
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Transactions", total_transactions)
-    col2.metric("Total Amount", f"${total_amount:,.2f}")
+    col2.metric("Total Amount", f"₹{total_amount:,.2f}")
     col3.metric("Date Range", date_range)
 
-    theme.section_header("📊", "Spending by Category")
+    theme.section_header("Spending by Category")
     category_totals = df.groupby("Category")["Amount"].agg(["sum", "count"]).reset_index()
     category_totals.columns = ["Category", "Total Amount", "Transaction Count"]
     st.dataframe(category_totals)
@@ -125,23 +127,23 @@ def display_budget_analysis(analysis: Dict[str, Any]):
         return
 
     if analysis.get("spending_categories"):
-        theme.section_header("🥧", "Spending by Category")
+        theme.section_header("Spending by Category")
         st.plotly_chart(charts.spending_breakdown_bar(analysis["spending_categories"]), use_container_width=True)
 
     if "total_expenses" in analysis:
-        theme.section_header("⚖️", "Income vs. Expenses")
+        theme.section_header("Income vs. Expenses")
         income = analysis.get("monthly_income", 0) or 0
         expenses = analysis["total_expenses"]
         surplus_deficit = income - expenses
         st.plotly_chart(charts.income_vs_expenses_bar(income, expenses), use_container_width=True)
-        st.metric("Monthly Surplus/Deficit", f"${surplus_deficit:.2f}", delta=f"{surplus_deficit:.2f}")
+        st.metric("Monthly Surplus/Deficit", f"₹{surplus_deficit:.2f}", delta=f"{surplus_deficit:.2f}")
 
     if analysis.get("recommendations"):
-        theme.section_header("💡", "Spending Reduction Recommendations")
+        theme.section_header("Spending Reduction Recommendations")
         for rec in analysis["recommendations"]:
             st.markdown(f"**{rec['category']}**: {rec['recommendation']}")
             if rec.get("potential_savings"):
-                st.metric("Potential Monthly Savings", f"${rec['potential_savings']:.2f}")
+                st.metric("Potential Monthly Savings", f"₹{rec['potential_savings']:.2f}")
 
 
 def display_savings_strategy(strategy: Dict[str, Any]):
@@ -149,22 +151,22 @@ def display_savings_strategy(strategy: Dict[str, Any]):
     if strategy is None:
         return
 
-    theme.section_header("📈", "Savings Recommendations")
+    theme.section_header("Savings Recommendations")
 
     ef = strategy.get("emergency_fund")
     if ef:
         st.markdown("### Emergency Fund")
-        st.markdown(f"**Recommended Size**: ${ef['recommended_amount']:.2f}")
+        st.markdown(f"**Recommended Size**: ₹{ef['recommended_amount']:.2f}")
         st.markdown(f"**Current Status**: {ef['current_status']}")
         if ef.get("recommended_amount"):
             progress = (ef.get("current_amount") or 0) / ef["recommended_amount"]
             st.progress(min(progress, 1.0))
-            st.markdown(f"\\${ef.get('current_amount', 0):.2f} of \\${ef['recommended_amount']:.2f}")
+            st.markdown(f"₹{ef.get('current_amount', 0):.2f} of ₹{ef['recommended_amount']:.2f}")
 
     if strategy.get("recommendations"):
         st.markdown("### Recommended Savings Allocations")
         for rec in strategy["recommendations"]:
-            st.markdown(f"**{rec['category']}**: ${rec['amount']:.2f}/month")
+            st.markdown(f"**{rec['category']}**: ₹{rec['amount']:.2f}/month")
             if rec.get("rationale"):
                 st.markdown(f"_{rec['rationale']}_")
 
@@ -180,12 +182,12 @@ def display_debt_reduction(plan: Dict[str, Any]):
         return
 
     if "total_debt" in plan:
-        st.metric("Total Debt", f"${plan['total_debt']:.2f}")
+        st.metric("Total Debt", f"₹{plan['total_debt']:.2f}")
 
     if plan.get("debts"):
-        theme.section_header("📋", "Your Debts")
+        theme.section_header("Your Debts")
         rows = [
-            [d["name"], f"${d['amount']:,.2f}", f"{d['interest_rate']:.2f}%", _apr_badge(d["interest_rate"]), f"${d.get('min_payment', 0):,.2f}"]
+            [d["name"], f"₹{d['amount']:,.2f}", f"{d['interest_rate']:.2f}%", _apr_badge(d["interest_rate"]), f"₹{d.get('min_payment', 0):,.2f}"]
             for d in plan["debts"]
         ]
         theme.render_table(["Name", "Balance", "APR", "Risk", "Min Payment"], rows)
@@ -193,38 +195,38 @@ def display_debt_reduction(plan: Dict[str, Any]):
 
     payoff_plans = plan.get("payoff_plans")
     if payoff_plans and payoff_plans.get("avalanche") and payoff_plans.get("snowball"):
-        theme.section_header("🧮", "Debt Payoff Plans", "Computed with real month-by-month amortization")
+        theme.section_header("Debt Payoff Plans", "Computed with real month-by-month amortization")
         avalanche, snowball = payoff_plans["avalanche"], payoff_plans["snowball"]
         tabs = st.tabs(["Avalanche Method", "Snowball Method", "Comparison"])
 
         with tabs[0]:
             st.markdown("### Avalanche Method (Highest Interest First)")
-            st.markdown(f"**Total Interest Paid**: ${avalanche['total_interest']:.2f}")
+            st.markdown(f"**Total Interest Paid**: ₹{avalanche['total_interest']:.2f}")
             st.markdown(f"**Time to Debt Freedom**: {avalanche['months_to_payoff']} months")
             if avalanche.get("monthly_payment"):
-                st.markdown(f"**Recommended Monthly Payment**: ${avalanche['monthly_payment']:.2f}")
+                st.markdown(f"**Recommended Monthly Payment**: ₹{avalanche['monthly_payment']:.2f}")
 
         with tabs[1]:
             st.markdown("### Snowball Method (Smallest Balance First)")
-            st.markdown(f"**Total Interest Paid**: ${snowball['total_interest']:.2f}")
+            st.markdown(f"**Total Interest Paid**: ₹{snowball['total_interest']:.2f}")
             st.markdown(f"**Time to Debt Freedom**: {snowball['months_to_payoff']} months")
             if snowball.get("monthly_payment"):
-                st.markdown(f"**Recommended Monthly Payment**: ${snowball['monthly_payment']:.2f}")
+                st.markdown(f"**Recommended Monthly Payment**: ₹{snowball['monthly_payment']:.2f}")
 
         with tabs[2]:
             st.markdown("### Method Comparison")
             interest_savings = snowball["total_interest"] - avalanche["total_interest"]
             if interest_savings > 0:
-                st.info(f"💡 The avalanche method saves **${interest_savings:,.2f}** in interest versus snowball.")
+                st.info(f"The avalanche method saves **₹{interest_savings:,.2f}** in interest versus snowball.")
             elif interest_savings < 0:
-                st.info(f"💡 The snowball method saves **${-interest_savings:,.2f}** in interest versus avalanche.")
+                st.info(f"The snowball method saves **₹{-interest_savings:,.2f}** in interest versus avalanche.")
             figs = charts.payoff_comparison_charts(avalanche, snowball)
             col1, col2 = st.columns(2)
             col1.plotly_chart(figs["interest"], use_container_width=True)
             col2.plotly_chart(figs["months"], use_container_width=True)
 
     if plan.get("recommendations"):
-        theme.section_header("💡", "Debt Reduction Recommendations")
+        theme.section_header("Debt Reduction Recommendations")
         for rec in plan["recommendations"]:
             st.markdown(f"**{rec['title']}**: {rec['description']}")
             if rec.get("impact"):
@@ -241,19 +243,19 @@ def display_goal_plan(plan: Dict[str, Any]):
         st.info("No financial goals were entered. Add goals in the input tab to see a funding plan here.")
         return
 
-    st.metric("Available Monthly Surplus for Goals", f"${plan.get('available_monthly_surplus', 0):,.2f}")
+    st.metric("Available Monthly Surplus for Goals", f"₹{plan.get('available_monthly_surplus', 0):,.2f}")
 
     for goal in goals:
-        st.markdown(f"### 🎯 {goal['name']}  {_status_badge(goal['on_track'])}", unsafe_allow_html=True)
+        st.markdown(f"### {goal['name']}  {_status_badge(goal['on_track'])}", unsafe_allow_html=True)
         cols = st.columns(4)
-        cols[0].metric("Target", f"${goal['target_amount']:,.2f}")
-        cols[1].metric("Required/mo", f"${goal['required_monthly_contribution']:,.2f}")
-        cols[2].metric("Allocated/mo", f"${goal['monthly_contribution_allocated']:,.2f}")
+        cols[0].metric("Target", f"₹{goal['target_amount']:,.2f}")
+        cols[1].metric("Required/mo", f"₹{goal['required_monthly_contribution']:,.2f}")
+        cols[2].metric("Allocated/mo", f"₹{goal['monthly_contribution_allocated']:,.2f}")
         cols[3].metric("Projected", f"{goal['projected_months_to_reach']} mo")
 
         if not goal["on_track"]:
             st.warning(
-                f"⚠️ At the surplus available after higher-priority goals, this will take "
+                f"At the surplus available after higher-priority goals, this will take "
                 f"{goal['projected_months_to_reach']} months instead of the requested "
                 f"{goal['target_months']}."
             )
@@ -296,10 +298,10 @@ def render_goals_input() -> List[Dict[str, Any]]:
         cols = st.columns(4)
         name = cols[0].text_input("Name", value=f"Goal {i + 1}", key=f"goal_name_{i}")
         target_amount = cols[1].number_input(
-            "Target Amount ($)", min_value=0.0, step=500.0, value=10000.0, key=f"goal_amount_{i}"
+            "Target Amount (₹)", min_value=0.0, step=5000.0, value=500000.0, key=f"goal_amount_{i}"
         )
         current_amount = cols[2].number_input(
-            "Already Saved ($)", min_value=0.0, step=100.0, value=0.0, key=f"goal_current_{i}"
+            "Already Saved (₹)", min_value=0.0, step=1000.0, value=0.0, key=f"goal_current_{i}"
         )
         target_years = cols[3].number_input(
             "Timeframe (years)", min_value=0.5, step=0.5, value=3.0, key=f"goal_years_{i}"
@@ -330,13 +332,13 @@ def render_debts_input() -> List[Dict[str, Any]]:
                 st.markdown(f"##### Debt #{i + 1}")
                 debt_name = st.text_input("Name", value=f"Debt {i + 1}", key=f"debt_name_{i}")
                 debt_amount = st.number_input(
-                    "Amount ($)", min_value=0.01, step=100.0, value=1000.0, key=f"debt_amount_{i}"
+                    "Amount (₹)", min_value=0.01, step=1000.0, value=100000.0, key=f"debt_amount_{i}"
                 )
                 interest_rate = st.number_input(
-                    "Interest Rate (%)", min_value=0.0, max_value=100.0, step=0.1, value=5.0, key=f"debt_rate_{i}"
+                    "Interest Rate (%)", min_value=0.0, max_value=100.0, step=0.1, value=14.0, key=f"debt_rate_{i}"
                 )
                 min_payment = st.number_input(
-                    "Minimum Payment ($)", min_value=0.0, step=10.0, value=50.0, key=f"debt_min_payment_{i}"
+                    "Minimum Payment (₹)", min_value=0.0, step=500.0, value=3000.0, key=f"debt_min_payment_{i}"
                 )
                 debts.append(
                     {"name": debt_name, "amount": debt_amount, "interest_rate": interest_rate, "min_payment": min_payment}

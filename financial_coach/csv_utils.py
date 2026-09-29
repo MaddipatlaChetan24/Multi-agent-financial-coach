@@ -29,7 +29,7 @@ def validate_csv_format(file) -> Tuple[bool, str]:
             return False, "Invalid date format in Date column"
 
         try:
-            df["Amount"].replace(r"[\$,]", "", regex=True).astype(float)
+            df["Amount"].replace(r"[₹\$,]", "", regex=True).astype(float)
         except Exception:
             return False, "Invalid amount format in Amount column"
 
@@ -48,7 +48,7 @@ def parse_csv_transactions(file_content: bytes) -> Dict[str, Any]:
             raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
 
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
-        df["Amount"] = df["Amount"].replace(r"[\$,]", "", regex=True).astype(float)
+        df["Amount"] = df["Amount"].replace(r"[₹\$,]", "", regex=True).astype(float)
 
         category_totals = df.groupby("Category")["Amount"].sum().reset_index()
 

@@ -12,6 +12,8 @@ A multi-agent AI advisor that analyzes your finances and produces a budget break
 [![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
+![AI Financial Coach dashboard](docs/dashboard.png)
+
 </div>
 
 ---
@@ -184,9 +186,9 @@ All debt-amortization, emergency-fund, and goal-projection math is covered by un
 
 ```csv
 Date,Category,Amount
-2024-01-01,Housing,1200.00
-2024-01-02,Food,150.50
-2024-01-03,Transportation,45.00
+2024-01-01,Housing,18000.00
+2024-01-02,Food,2200.00
+2024-01-03,Transportation,900.00
 ```
 
 Required columns: `Date` (YYYY-MM-DD), `Category`, `Amount` (currency symbols and commas are stripped automatically). A template is available from the app's sidebar. Upload multiple months of data to see the spending trend chart.
