@@ -18,9 +18,7 @@ A multi-agent AI advisor that analyzes your finances and produces a budget break
 
 ---
 
-> Forked and substantially rewritten from [Shubham Saboo's `ai_financial_coach_agent`](https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_ai_agents/multi_agent_apps/ai_financial_coach_agent). See [NOTICE](NOTICE) for the full list of changes.
->
-> **Why this fork exists:** the original asked an LLM to *compute* debt amortization and emergency-fund numbers from scratch — LLMs are not reliable calculators, and two runs on the same input could produce different answers. This version draws a hard line: **agents reason, code computes.** Every number that requires arithmetic is computed by tested, deterministic Python; the four Gemini agents only categorize, prioritize, and write recommendations on top of numbers they're handed.
+> **Design principle:** asking an LLM to *compute* debt amortization and emergency-fund numbers from scratch is unreliable — LLMs are not calculators, and two runs on the same input can produce different answers. This project draws a hard line: **agents reason, code computes.** Every number that requires arithmetic is computed by tested, deterministic Python; the four Gemini agents only categorize, prioritize, and write recommendations on top of numbers they're handed.
 
 ---
 
@@ -88,8 +86,8 @@ Numbers flow **into** the agents from `calculators.py`, never the other way arou
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/ai-financial-coach.git
-cd ai-financial-coach
+git clone https://github.com/MaddipatlaChetan24/Multi-agent-financial-coach.git
+cd Multi-agent-financial-coach
 
 # Create a virtual environment
 python -m venv venv
@@ -120,7 +118,7 @@ The app opens at **http://localhost:8501/**.
 ## Project Structure
 
 ```text
-ai-financial-coach/
+Multi-agent-financial-coach/
 ├── app.py                     # Streamlit entrypoint
 ├── financial_coach/
 │   ├── models.py              # Pydantic schemas (LLM "insight" outputs vs. computed data)
@@ -163,10 +161,10 @@ ai-financial-coach/
 
 ```bash
 # Build the image
-docker build -t ai-financial-coach .
+docker build -t multi-agent-financial-coach .
 
 # Run the container (ensure your .env is passed)
-docker run -p 8501:8501 --env-file .env ai-financial-coach
+docker run -p 8501:8501 --env-file .env multi-agent-financial-coach
 ```
 
 ---
@@ -201,7 +199,7 @@ All data is processed locally in your session; nothing is persisted to disk. Fin
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0 — see [LICENSE](LICENSE).
 
 This is an educational project, not professional financial advice.
 
